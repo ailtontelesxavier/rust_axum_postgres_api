@@ -1,15 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Debug, Deserialize, Default)]
 pub struct FilterOptions {
+    #[serde(default)]
     pub page: Option<usize>,
+    #[serde(default)]
     pub limit: Option<usize>,
 }
 
-#[derive(Deserialize, Debug)]
-pub struct ParamOptions {
-    pub id: String,
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateNoteSchema {
