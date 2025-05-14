@@ -46,12 +46,7 @@ pub async fn note_list_handler(
     let json_response = serde_json::json!({
         "status": "success",
         "results": notes.len(),
-        "notes": notes
-    });
-    Ok(Json(json_response))
-}
-
-pub async fn create_note_handler(
+        "notes": notesStatusCode
     State(data): State<Arc<AppState>>,
     Json(body): Json<CreateNoteSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
@@ -89,6 +84,33 @@ pub async fn create_note_handler(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({"status": "error", "message": format!("{:?}", e)})),
             ))
+        }
+    }
+}
+
+pub async fn get_note_handler(
+    Path(id): Path<uuid::Uuid>,
+    State(data): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let query_result = sqlx::query_as!(NoteModel, "SELECT * FROM notes WHERE  id = $1", id)
+        .fetch_one(&data.db)
+        .await;
+
+    match query_result {
+        Ok(note) => {
+            let note_response = serde_json::json!({
+                "status": "success",
+                "data": serde_json::json!({
+                    "note": note
+                }),
+            });
+        }
+        Err(_) => {
+            let error_response = serde_json::json!({
+                "status": "fail",
+                "message": format!("Note with ID: {} not found", id)
+            });
+            return Err((StatusCode::NOT_FOUND, Json(error_response)));
         }
     }
 }
